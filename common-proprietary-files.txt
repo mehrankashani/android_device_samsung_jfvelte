@@ -85,7 +85,6 @@ lib/libdrmtime.so
 lib/libQSEEComAPI.so
 
 # GPS
-bin/loc_launcher
 lib/hw/gps.default.so
 lib/libgps.utils.so
 lib/libloc_api_v02.so
@@ -94,26 +93,6 @@ lib/libloc_core.so
 vendor/lib/libgeofence.so
 vendor/lib/libizat_core.so
 vendor/lib/liblbs_core.so
-
-# Graphics
-vendor/lib/egl/eglsubAndroid.so
-vendor/lib/egl/libEGL_adreno.so
-vendor/lib/egl/libGLESv1_CM_adreno.so
-vendor/lib/egl/libGLESv2_adreno.so
-vendor/lib/egl/libq3dtools_adreno.so
-vendor/lib/egl/libplayback_adreno.so
-vendor/lib/libadreno_utils.so
-vendor/lib/libbccQTI.so
-vendor/lib/libC2D2.so
-vendor/lib/libc2d30-a3xx.so
-vendor/lib/libc2d30.so
-vendor/lib/libCB.so
-vendor/lib/libgsl.so
-vendor/lib/libllvm-qcom.so
-vendor/lib/libRSDriver_adreno.so
-vendor/lib/librs_adreno.so
-vendor/lib/librs_adreno_sha1.so
-vendor/lib/libsc-a3xx.so
 
 # Graphics firmware
 etc/firmware/a300_pfp.fw
@@ -161,12 +140,11 @@ lib/libTimeService.so
 vendor/lib/libtime_genoff.so
 
 # Widevine
-lib/libdrmdecrypt.so
-vendor/lib/drm/libdrmwvmplugin.so
-vendor/lib/libwvdrm_L1.so
-vendor/lib/libwvm.so
-vendor/lib/libWVStreamControlAPI_L1.so
-vendor/lib/mediadrm/libwvdrmengine.so
+vendor/lib/drm/libdrmwvmplugin.so|3bee766222895f524421eb996ca6a08bcf95f19f
+vendor/lib/libwvdrm_L1.so|3eaf8ed1cb337608a1ccdb80d2c95804e7aea323
+vendor/lib/libwvm.so|59c4c078f4b897ddac8f665309b7a3f25522f207
+vendor/lib/libWVStreamControlAPI_L1.so|6b28492ac55b9a3d86993343cf2c8b55240b3420
+vendor/lib/mediadrm/libwvdrmengine.so|6bdcc4d59b07ccbdd7b07a99677406ade3d2e232
 
 # Wi-Fi
 etc/wifi/bcmdhd_apsta.bin
