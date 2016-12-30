@@ -28,10 +28,9 @@
  */
 
 #include <stdlib.h>
-#include <unistd.h>
 
-#include <cutils/properties.h>
 #include "vendor_init.h"
+#include "property_service.h"
 #include "log.h"
 #include "util.h"
 
@@ -42,12 +41,12 @@ void vendor_load_properties()
     char device[PROP_VALUE_MAX];
     char devicename[PROP_VALUE_MAX];
     int rc;
-
-    rc = property_get("ro.board.platform", platform, NULL);
+    
+    rc = property_get("ro.board.platform", platform);
     if (!rc || strncmp(platform, ANDROID_TARGET, PROP_VALUE_MAX))
         return;
 
-    property_get("ro.bootloader", bootloader, NULL);
+    property_get("ro.bootloader", bootloader);
 
     if (strstr(bootloader, "I9515")) {
         /* jfveltexx - GT-i9515 */
@@ -65,7 +64,6 @@ void vendor_load_properties()
         property_set("ro.product.name", "jfvelteub");
     }
 
-    property_get("ro.product.device", device, NULL);
     strlcpy(devicename, device, sizeof(devicename));
     ERROR("Found bootloader id %s setting build properties for %s device\n", bootloader, devicename);
 

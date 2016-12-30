@@ -34,9 +34,6 @@ on early-init
     mkdir /firmware 0771 system system
     mkdir /firmware-mdm 0771 system system
 
-    mount debugfs debugfs /sys/kernel/debug
-    chmod 0755 /sys/kernel/debug
-
 on init
     export LD_SHIM_LIBS /system/lib/libril.so|libshim_ril.so
 
@@ -149,11 +146,15 @@ on post-fs-data
     group system wifi qcom_diag radio
     oneshot
 
+    service config_bluetooth /system/bin/sh /system/etc/init.qcom.bt.sh "onboot"
+    class core
+    user root
+    oneshot
+
     service hciattach /system/bin/sh /system/etc/init.qcom.bt.sh
     class late_start
     user bluetooth
     group qcom_oncrpc bluetooth net_bt_admin
-    seclabel u:r:bluetooth_loader:s0
     disabled
     oneshot
 
@@ -172,15 +173,28 @@ on early-boot
     setprop qcom.audio.init complete
 
 on boot
-    # Configure bluetooth
-    chmod 0660 /proc/bluetooth/sleep/lpm
-    chmod 0660 /proc/bluetooth/sleep/btwrite
+    chown bluetooth net_bt_stack /sys/class/rfkill/rfkill0/type
+    chown bluetooth net_bt_stack /sys/class/rfkill/rfkill0/state
     chmod 0660 /sys/class/rfkill/rfkill0/state
-    chmod 0660 /dev/ttyHS0
+    chown bluetooth bluetooth /proc/bluetooth/sleep/proto
+    chmod 0660 /proc/bluetooth/sleep/proto
+    chown bluetooth bluetooth /sys/devices/platform/msm_serial_hs.0/clock
+    chmod 0660 /sys/devices/platform/msm_serial_hs.0/clock
+
+    # for BT MAC address
+    mkdir /efs/bluetooth 0775 radio system
+    # if already exist
+    chown radio system /efs/bluetooth
+    chmod 0775 /efs/bluetooth
+
+    chown radio radio /efs/bluetooth/bt_addr
+    chmod 0644 /efs/bluetooth/bt_addr
+
+    # Bluetooth LPM
     chown bluetooth net_bt_stack /proc/bluetooth/sleep/lpm
     chown bluetooth net_bt_stack /proc/bluetooth/sleep/btwrite
-    chown bluetooth net_bt_stack /sys/class/rfkill/rfkill0/state
-    chown bluetooth net_bt_stack /dev/ttyHS0
+    chmod 0220 /proc/bluetooth/sleep/lpm
+    chmod 0220 /proc/bluetooth/sleep/btwrite
 
     # Create QMUX daemon socket area
     mkdir /dev/socket/qmux_audio 2770 media audio
@@ -220,6 +234,11 @@ on boot
     # Increased technology maximums should be reflected here.
     write /proc/sys/net/core/rmem_max  8388608
     write /proc/sys/net/core/wmem_max  8388608
+
+    # To allow interfaces to get v6 address when tethering is enabled
+    write /proc/sys/net/ipv6/conf/rmnet_usb0/accept_ra 2
+    write /proc/sys/net/ipv6/conf/rmnet_usb1/accept_ra 2
+    write /proc/sys/net/ipv6/conf/rmnet_usb2/accept_ra 2
 
     # To prevent out of order acknowledgements from making
     # connection tracking to treat them as not belonging to
@@ -415,17 +434,14 @@ service qcamerasvr /system/bin/mm-qcamera-daemon
 service mpdecision /system/bin/mpdecision --avg_comp
     class main
     user root
-    group system readproc
+    group system
     disabled
 
 service kickstart /system/bin/qcks -i /firmware-mdm/image/
+    class core
     user root
     group radio cache inet misc audio sdcard_rw log system
     oneshot
-    disabled
-
-on property:ro.baseband=mdm
-    start kickstart
 
 service qseecomd /system/bin/qseecomd
     class late_start
@@ -438,14 +454,10 @@ service time_daemon /system/bin/time_daemon
     group root
 
 service insthk /system/bin/insthk
-    class main
+    class core
     user root
-    disabled
     oneshot
     seclabel u:r:insthk_exec:s0
-
-on property:sys.qseecomd.enable=true
-    start insthk
 
 service irsc_util /system/bin/irsc_util "/etc/sec_config"
     class main
@@ -495,10 +507,14 @@ service p2p_supplicant /system/bin/wpa_supplicant \
     disabled
     oneshot
 
+service loc_launcher /system/bin/loc_launcher
+    # loc_launcher will start as root and set its UID to gps
+    class late_start
+    group gps inet net_raw qcom_diag net_admin wifi
+
 service macloader /system/bin/macloader
     class main
     oneshot
-    seclabel u:r:macloader_exec:s0
 
 on property:init.svc.macloader=stopped
     chown root system /data/.rev
@@ -512,6 +528,14 @@ service thermal-engine /system/bin/thermal-engine
     class main
     user root
     group root
+
+service ril-daemon /system/bin/rild
+    class main
+    socket rild stream 660 root radio
+    socket sap_uim_socket1 stream 660 bluetooth bluetooth
+    socket rild-debug stream 660 radio system
+    user root
+    group radio cache inet misc audio log qcom_diag
 
 # Disable boot timeout for external modems
 on property:persist.sys.mdm.timeout_disable=1
